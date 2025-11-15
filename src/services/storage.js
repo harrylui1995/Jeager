@@ -37,12 +37,14 @@ export async function uploadCV(file, userId) {
       return { storagePath: null, publicUrl: null, error };
     }
 
-    // Get public URL (if bucket is public, otherwise null)
+    // Get public URL (NOTE: This only works if the bucket is public)
+    // For private buckets, use getSignedURL() or getCVUrl() instead
+    // Accessing publicUrl on a private bucket will result in a 400 error
     const { data: urlData } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(storagePath);
 
     return {
       storagePath: data.path,
-      publicUrl: urlData?.publicUrl || null,
+      publicUrl: urlData?.publicUrl || null, // May be null or invalid if bucket is private
       error: null,
     };
   } catch (err) {
@@ -137,10 +139,43 @@ export async function getSignedURL(storagePath, expiresIn = 3600) {
   }
 }
 
+/**
+ * Get a valid URL for accessing a CV file (uses signed URL for private buckets)
+ * This is the recommended way to get a URL that will actually work
+ * @param {string} storagePath - Storage path
+ * @param {number} expiresIn - Expiration time in seconds for signed URLs (default: 3600 = 1 hour)
+ * @returns {Promise<{url, error}>}
+ */
+export async function getCVUrl(storagePath, expiresIn = 3600) {
+  try {
+    // Try to get a signed URL first (works for private buckets)
+    const { signedUrl, error: signedError } = await getSignedURL(storagePath, expiresIn);
+    
+    if (!signedError && signedUrl) {
+      return { url: signedUrl, error: null };
+    }
+
+    // Fallback to public URL if signed URL fails (might work if bucket is public)
+    const { data: urlData } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(storagePath);
+    
+    if (urlData?.publicUrl) {
+      return { url: urlData.publicUrl, error: null };
+    }
+
+    return { 
+      url: null, 
+      error: new Error('Failed to generate URL. Check bucket permissions.') 
+    };
+  } catch (err) {
+    return { url: null, error: new Error(`Get CV URL failed: ${err.message}`) };
+  }
+}
+
 export default {
   uploadCV,
   downloadCV,
   deleteCV,
   listUserCVFiles,
   getSignedURL,
+  getCVUrl,
 };

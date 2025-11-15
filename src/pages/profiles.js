@@ -121,9 +121,22 @@ export async function renderProfilesPage(container, user) {
       </div>
     `;
   } catch (error) {
+    // Format error message to preserve newlines and provide better visibility
+    const errorMessage = error.message || 'Unknown error occurred';
+    const formattedMessage = errorMessage.replace(/\n/g, '<br>');
+    
     container.innerHTML = `
-      <div class="alert alert-error">
-        Failed to load profiles: ${error.message}
+      <div class="alert alert-error" style="white-space: pre-wrap; line-height: 1.6;">
+        <strong>Failed to load profiles:</strong><br>
+        ${formattedMessage}
+        <br><br>
+        <strong>Quick Fix:</strong>
+        <ul style="margin-top: 0.5rem; padding-left: 1.5rem;">
+          <li>Check your <code>.env</code> file has <code>VITE_LINKEDIN_PROVIDER=rapidapi</code> and <code>VITE_LINKEDIN_API_KEY=your-key</code></li>
+          <li>Restart your dev server after changing <code>.env</code> file</li>
+          <li>Verify your API key at <a href="https://rapidapi.com/rockapis-rockapis-default/api/linkedin-data-scraper" target="_blank">RapidAPI Dashboard</a></li>
+          <li>Or use mock data by setting <code>VITE_LINKEDIN_PROVIDER=mock</code> in <code>.env</code></li>
+        </ul>
       </div>
     `;
   }

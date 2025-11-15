@@ -4,11 +4,14 @@
  */
 
 import * as pdfjsLib from 'pdfjs-dist';
+// Import worker as URL - Vite will handle bundling correctly
+import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import mammoth from 'mammoth';
 import { ALLOWED_FILE_TYPES, SKILL_CATEGORIES } from '../utils/constants.js';
 
-// Configure PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// Configure PDF.js worker - use local worker file instead of CDN
+// This avoids network issues and version mismatches
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 // Common technical skills dictionary (sample - extend as needed)
 const TECHNICAL_SKILLS = [

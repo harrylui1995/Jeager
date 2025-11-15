@@ -15,6 +15,23 @@ const LINKEDIN_API_KEY = import.meta.env.VITE_LINKEDIN_API_KEY;
 const LINKEDIN_API_ENDPOINT = import.meta.env.VITE_LINKEDIN_API_ENDPOINT;
 const LINKEDIN_PROVIDER = import.meta.env.VITE_LINKEDIN_PROVIDER || 'mock'; // rapidapi, scraperapi, brightdata, mock
 
+// Debug logging (only in development)
+if (import.meta.env.DEV) {
+  console.log('[LinkedIn Service] Configuration:', {
+    provider: LINKEDIN_PROVIDER,
+    hasApiKey: !!LINKEDIN_API_KEY,
+    apiKeyLength: LINKEDIN_API_KEY?.length || 0,
+    endpoint: LINKEDIN_API_ENDPOINT || 'default',
+  });
+  
+  if (LINKEDIN_PROVIDER === 'rapidapi' && !LINKEDIN_API_KEY) {
+    console.warn(
+      '[LinkedIn Service] ⚠️ RapidAPI provider selected but VITE_LINKEDIN_API_KEY is missing!\n' +
+      'Set VITE_LINKEDIN_API_KEY in your .env file or use VITE_LINKEDIN_PROVIDER=mock for testing.'
+    );
+  }
+}
+
 /**
  * Search for companies on LinkedIn
  * @param {object} query - Search query
@@ -36,7 +53,8 @@ export async function searchCompanies(query, filters = {}) {
         return getMockCompanies(query);
     }
   } catch (err) {
-    return { companies: null, error: new Error(`Company search failed: ${err.message}`) };
+    // Preserve the original error message which now includes detailed diagnostics
+    return { companies: null, error: err };
   }
 }
 
@@ -61,7 +79,8 @@ export async function searchProfiles(query, filters = {}) {
         return getMockProfiles(query);
     }
   } catch (err) {
-    return { profiles: null, error: new Error(`Profile search failed: ${err.message}`) };
+    // Preserve the original error message which now includes detailed diagnostics
+    return { profiles: null, error: err };
   }
 }
 
@@ -93,10 +112,22 @@ export async function checkRateLimit(userId) {
  * https://rapidapi.com/rockapis-rockapis-default/api/linkedin-data-scraper
  */
 async function searchCompaniesRapidAPI(query, filters = {}) {
+  // Validate API key before making request
+  if (!LINKEDIN_API_KEY || LINKEDIN_API_KEY.trim() === '') {
+    throw new Error(
+      'RapidAPI key is missing. Please set VITE_LINKEDIN_API_KEY in your .env file. ' +
+      'Get your API key from: https://rapidapi.com/rockapis-rockapis-default/api/linkedin-data-scraper'
+    );
+  }
+
   const { keywords, industries } = query;
   const { limit = 20 } = filters;
 
   const searchQuery = [...(keywords || []), ...(industries || [])].join(' ');
+
+  if (!searchQuery || searchQuery.trim() === '') {
+    throw new Error('Search query is empty. Please provide keywords or industries to search for companies.');
+  }
 
   const response = await fetch(
     `https://linkedin-data-scraper.p.rapidapi.com/company_search?query=${encodeURIComponent(searchQuery)}`,
@@ -111,7 +142,34 @@ async function searchCompaniesRapidAPI(query, filters = {}) {
   );
 
   if (!response.ok) {
-    throw new Error(`RapidAPI error: ${response.statusText}`);
+    // Try to get more detailed error information
+    let errorMessage = `RapidAPI error: ${response.status} ${response.statusText}`;
+    
+    try {
+      const errorData = await response.json();
+      if (errorData.message) {
+        errorMessage += ` - ${errorData.message}`;
+      }
+      
+      // Provide specific guidance for common errors
+      if (response.status === 403) {
+        errorMessage += 
+          '\n\nPossible causes:' +
+          '\n1. Invalid or missing API key - Check VITE_LINKEDIN_API_KEY in .env' +
+          '\n2. API key not subscribed to this endpoint - Subscribe at https://rapidapi.com/rockapis-rockapis-default/api/linkedin-data-scraper' +
+          '\n3. Free tier quota exceeded - Upgrade your plan or wait for quota reset' +
+          '\n4. API key expired or revoked - Generate a new key from RapidAPI dashboard';
+      } else if (response.status === 429) {
+        errorMessage += '\n\nRate limit exceeded. Please wait before making more requests.';
+      } else if (response.status === 401) {
+        errorMessage += '\n\nUnauthorized. Please check your API key is correct.';
+      }
+    } catch (e) {
+      // If we can't parse the error response, use the status text
+      errorMessage += `\n\nResponse body could not be parsed. Status: ${response.status}`;
+    }
+    
+    throw new Error(errorMessage);
   }
 
   const data = await response.json();
@@ -129,10 +187,22 @@ async function searchCompaniesRapidAPI(query, filters = {}) {
 }
 
 async function searchProfilesRapidAPI(query, filters = {}) {
+  // Validate API key before making request
+  if (!LINKEDIN_API_KEY || LINKEDIN_API_KEY.trim() === '') {
+    throw new Error(
+      'RapidAPI key is missing. Please set VITE_LINKEDIN_API_KEY in your .env file. ' +
+      'Get your API key from: https://rapidapi.com/rockapis-rockapis-default/api/linkedin-data-scraper'
+    );
+  }
+
   const { keywords } = query;
   const { limit = 30 } = filters;
 
   const searchQuery = (keywords || []).join(' ');
+
+  if (!searchQuery || searchQuery.trim() === '') {
+    throw new Error('Search query is empty. Please provide keywords to search for profiles.');
+  }
 
   const response = await fetch(
     `https://linkedin-data-scraper.p.rapidapi.com/person_search?query=${encodeURIComponent(searchQuery)}`,
@@ -147,7 +217,34 @@ async function searchProfilesRapidAPI(query, filters = {}) {
   );
 
   if (!response.ok) {
-    throw new Error(`RapidAPI error: ${response.statusText}`);
+    // Try to get more detailed error information
+    let errorMessage = `RapidAPI error: ${response.status} ${response.statusText}`;
+    
+    try {
+      const errorData = await response.json();
+      if (errorData.message) {
+        errorMessage += ` - ${errorData.message}`;
+      }
+      
+      // Provide specific guidance for common errors
+      if (response.status === 403) {
+        errorMessage += 
+          '\n\nPossible causes:' +
+          '\n1. Invalid or missing API key - Check VITE_LINKEDIN_API_KEY in .env' +
+          '\n2. API key not subscribed to this endpoint - Subscribe at https://rapidapi.com/rockapis-rockapis-default/api/linkedin-data-scraper' +
+          '\n3. Free tier quota exceeded - Upgrade your plan or wait for quota reset' +
+          '\n4. API key expired or revoked - Generate a new key from RapidAPI dashboard';
+      } else if (response.status === 429) {
+        errorMessage += '\n\nRate limit exceeded. Please wait before making more requests.';
+      } else if (response.status === 401) {
+        errorMessage += '\n\nUnauthorized. Please check your API key is correct.';
+      }
+    } catch (e) {
+      // If we can't parse the error response, use the status text
+      errorMessage += `\n\nResponse body could not be parsed. Status: ${response.status}`;
+    }
+    
+    throw new Error(errorMessage);
   }
 
   const data = await response.json();

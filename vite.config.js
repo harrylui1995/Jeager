@@ -3,6 +3,7 @@ import { resolve } from 'path';
 
 export default defineConfig({
   root: 'src',
+  envDir: '..', // Look for .env files in project root, not src/
   publicDir: '../public',
   build: {
     outDir: '../dist',

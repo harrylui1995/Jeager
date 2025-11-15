@@ -72,6 +72,33 @@ ON public.cv_metadata FOR ALL
 USING (auth.uid() = user_id);
 
 -- =============================================================================
+-- TABLE: search_sessions
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS public.search_sessions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  cv_id UUID NOT NULL REFERENCES public.cv_metadata(id) ON DELETE CASCADE,
+  search_type TEXT NOT NULL CHECK (search_type IN ('company', 'profile')),
+  filters JSONB NOT NULL,
+  results_count INTEGER DEFAULT 0 CHECK (results_count >= 0),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes for search_sessions
+CREATE INDEX idx_search_sessions_user_id ON public.search_sessions(user_id);
+CREATE INDEX idx_search_sessions_cv_id ON public.search_sessions(cv_id);
+CREATE INDEX idx_search_sessions_type ON public.search_sessions(search_type);
+CREATE INDEX idx_search_sessions_created_at ON public.search_sessions(created_at DESC);
+
+-- RLS Policy for search_sessions
+ALTER TABLE public.search_sessions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can CRUD their own search sessions"
+ON public.search_sessions FOR ALL
+USING (auth.uid() = user_id);
+
+-- =============================================================================
 -- TABLE: company_matches
 -- =============================================================================
 
@@ -119,7 +146,7 @@ CREATE TABLE IF NOT EXISTS public.profile_matches (
   search_session_id UUID REFERENCES public.search_sessions(id) ON DELETE SET NULL,
   profile_name TEXT NOT NULL,
   linkedin_url TEXT NOT NULL CHECK (linkedin_url LIKE 'https://www.linkedin.com/in/%'),
-  current_role TEXT,
+  "current_role" TEXT,
   current_company TEXT,
   location TEXT,
   headline TEXT,
@@ -145,33 +172,6 @@ ALTER TABLE public.profile_matches ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can CRUD their own profile matches"
 ON public.profile_matches FOR ALL
-USING (auth.uid() = user_id);
-
--- =============================================================================
--- TABLE: search_sessions
--- =============================================================================
-
-CREATE TABLE IF NOT EXISTS public.search_sessions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  cv_id UUID NOT NULL REFERENCES public.cv_metadata(id) ON DELETE CASCADE,
-  search_type TEXT NOT NULL CHECK (search_type IN ('company', 'profile')),
-  filters JSONB NOT NULL,
-  results_count INTEGER DEFAULT 0 CHECK (results_count >= 0),
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Indexes for search_sessions
-CREATE INDEX idx_search_sessions_user_id ON public.search_sessions(user_id);
-CREATE INDEX idx_search_sessions_cv_id ON public.search_sessions(cv_id);
-CREATE INDEX idx_search_sessions_type ON public.search_sessions(search_type);
-CREATE INDEX idx_search_sessions_created_at ON public.search_sessions(created_at DESC);
-
--- RLS Policy for search_sessions
-ALTER TABLE public.search_sessions ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can CRUD their own search sessions"
-ON public.search_sessions FOR ALL
 USING (auth.uid() = user_id);
 
 -- =============================================================================
