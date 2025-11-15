@@ -64,8 +64,13 @@ Find relevant LinkedIn connections for coffee chats based on your CV. Upload you
    ```env
    VITE_SUPABASE_URL=https://your-project-ref.supabase.co
    VITE_SUPABASE_ANON_KEY=your-anon-key-here
-   VITE_LINKEDIN_API_KEY=your-linkedin-api-key-here
-   VITE_LINKEDIN_API_ENDPOINT=https://nubela.co/proxycurl/api
+
+   # For RapidAPI (recommended):
+   VITE_LINKEDIN_PROVIDER=rapidapi
+   VITE_LINKEDIN_API_KEY=your-rapidapi-key
+
+   # Or use mock data for testing:
+   VITE_LINKEDIN_PROVIDER=mock
    ```
 
 5. **Run development server**
@@ -77,17 +82,28 @@ Find relevant LinkedIn connections for coffee chats based on your CV. Upload you
 
 ### LinkedIn API Setup
 
-Sign up for one of these services to enable LinkedIn search:
+**Important**: Proxycurl has shut down. Use one of these alternatives:
 
-- **Proxycurl** (Recommended): [https://nubela.co/proxycurl/](https://nubela.co/proxycurl/)
-  - Free trial: 100 credits
-  - Costs: $0.02/request after trial
+#### Recommended: RapidAPI LinkedIn Data Scraper ⭐
 
-- **RapidAPI LinkedIn Profile Data**: [https://rapidapi.com](https://rapidapi.com)
-  - Search for "LinkedIn Profile Data API"
-  - Free tier: 10 requests/day
+1. Sign up at [RapidAPI](https://rapidapi.com)
+2. Subscribe to [LinkedIn Data Scraper API](https://rapidapi.com/rockapis-rockapis-default/api/linkedin-data-scraper)
+3. Get your API key from the dashboard
+4. Configure in `.env`:
+   ```env
+   VITE_LINKEDIN_PROVIDER=rapidapi
+   VITE_LINKEDIN_API_KEY=your-rapidapi-key
+   ```
 
-**Note**: The app will work with mock data if no API key is provided (for development/testing).
+**Pricing**: Free tier (100 requests/month), Basic $9.99/mo (1,000 requests)
+
+#### Other Options:
+
+- **ScraperAPI**: https://www.scraperapi.com/ (5,000 free requests/month)
+- **Bright Data**: https://brightdata.com/ (Enterprise-grade, custom pricing)
+- **Mock Data**: Set `VITE_LINKEDIN_PROVIDER=mock` (no API key needed)
+
+**See [LINKEDIN_API_ALTERNATIVES.md](LINKEDIN_API_ALTERNATIVES.md) for detailed setup guides for all providers.**
 
 ## Usage
 
