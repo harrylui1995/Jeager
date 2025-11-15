@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LinkedIn CV Matcher - Find Your Perfect Connections</title>
+  <meta name="description" content="Upload your CV and find relevant LinkedIn connections for coffee chats based on your skills and experience.">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/styles/main.css">
+  <link rel="stylesheet" href="/styles/components.css">
+  <link rel="stylesheet" href="/styles/pages.css">
+</head>
+<body>
+  <!-- App Container -->
+  <div id="app">
+    <!-- Navigation -->
+    <nav id="navbar" class="navbar" style="display: none;">
+      <div class="container">
+        <div class="nav-brand">
+          <h1>CV Matcher</h1>
+        </div>
+        <ul class="nav-menu">
+          <li><a href="#/dashboard" class="nav-link">Dashboard</a></li>
+          <li><a href="#/upload" class="nav-link">Upload CV</a></li>
+          <li><a href="#/companies" class="nav-link">Companies</a></li>
+          <li><a href="#/profiles" class="nav-link">Profiles</a></li>
+          <li><button id="logout-btn" class="btn btn-secondary btn-sm">Logout</button></li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main id="main-content" class="container">
+      <!-- Content dynamically loaded here -->
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+      </div>
+    </main>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+  </div>
+
+  <!-- Main Application Script -->
+  <script type="module" src="/main.js"></script>
+</body>
+</html>
